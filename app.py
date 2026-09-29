@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Inicializácia stavov prehliadania knihy (Strana 1 až 3)
+# Inicializácia stavov
 if 'page' not in st.session_state:
     st.session_state['page'] = 1
 if 'data' not in st.session_state:
@@ -23,14 +23,13 @@ if 'api_key' not in st.session_state:
     st.session_state['api_key'] = ""
 
 # ==========================================
-# 2. CUSTOM CSS - TECH MODRÁ & MOZGOVÝ SLIDER
+# 2. CUSTOM CSS (Tech štýl, hrubý farebný slider, menší obrazok)
 # ==========================================
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
 
     .stApp {
-        /* Odstránená fialová/ružová, nahradená tmavou tech modrou/bridlicovou */
         background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
         font-family: 'Outfit', sans-serif;
         color: #f8fafc;
@@ -38,7 +37,6 @@ st.markdown("""
     
     #MainMenu, header, footer {visibility: hidden;}
 
-    /* Interaktívny žiarivý nadpis OTESTUJ SA! */
     .glow-title-container {
         text-align: center;
         margin-top: 10px;
@@ -51,7 +49,6 @@ st.markdown("""
         color: #ffffff;
         text-transform: uppercase;
         letter-spacing: 3px;
-        /* Modro-tyrkysové žiarenie miesto fialovej */
         text-shadow: 0 0 10px #0ea5e9, 0 0 20px #0ea5e9, 0 0 40px #3b82f6;
         transition: all 0.4s ease-in-out;
         cursor: pointer;
@@ -59,14 +56,12 @@ st.markdown("""
     }
 
     .glow-title:hover {
-        text-shadow: 0 0 20px #3b82f6, 0 0 40px #60a5fa, 0 0 80px #93c5fd, 0 0 120px #93c5fd;
+        text-shadow: 0 0 20px #3b82f6, 0 0 40px #60a5fa, 0 0 80px #93c5fd;
         transform: scale(1.05);
-        color: #ffffff;
     }
 
-    /* 3D Kniha pri pohľade zhora - Modrý štýl */
     .book-container {
-        max-width: 900px;
+        max-width: 850px;
         margin: 0 auto;
         background: rgba(15, 23, 42, 0.85);
         border: 2px solid #3b82f6;
@@ -77,7 +72,7 @@ st.markdown("""
         position: relative;
     }
 
-    /* Horné záložky (Paging Indicator) */
+    /* Klikateľné záložky hore na prepínanie stránok */
     .book-tabs {
         display: flex;
         justify-content: center;
@@ -93,6 +88,13 @@ st.markdown("""
         background: rgba(255, 255, 255, 0.05);
         color: #94a3b8;
         border: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .tab-item:hover {
+        border-color: #0ea5e9;
+        color: #ffffff;
     }
 
     .tab-item.active {
@@ -103,81 +105,70 @@ st.markdown("""
     }
 
     /* =========================================
-       CUSTOM SLIDER - MOZOG + ZELENÁ-ŽLTÁ-ČERVENÁ ČIARA
+       HRUBÁ A ŽIARIVÁ FAREBNÁ ČIARA (SLIDER)
        ========================================= */
-    
-    /* Obal slideru pre extra priestor hore/dole */
     .stSlider {
-        padding-top: 30px !important;
-        padding-bottom: 20px !important;
+        padding-top: 35px !important;
+        padding-bottom: 25px !important;
     }
     
-    /* Samotná farebná čiara s gradientom */
     .stSlider [data-baseweb="slider"] {
         background: linear-gradient(to right, #22c55e 0%, #eab308 50%, #ef4444 100%) !important;
-        height: 14px !important;
-        border-radius: 10px !important;
-        box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        height: 18px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 0 20px rgba(239, 68, 68, 0.4);
     }
     
-    /* Zneviditeľnenie pôvodného modrého "vyplnenia", aby bolo vidieť celý náš gradient */
     .stSlider [data-baseweb="slider"] > div {
         background: transparent !important;
     }
     
-    /* Vlastný ukazovateľ (zrušíme pôvodný krúžok) */
     .stSlider [role="slider"] {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-    
-    /* Vloženie 🧠 emoji namiesto guličky */
-    .stSlider [role="slider"]::after {
-        content: "🧠";
-        font-size: 45px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        filter: drop-shadow(0 5px 10px rgba(0,0,0,0.7));
-        cursor: grab;
+        background: #ffffff !important;
+        border: 4px solid #0ea5e9 !important;
+        width: 30px !important;
+        height: 30px !important;
+        border-radius: 50% !important;
+        box-shadow: 0 0 15px rgba(14, 165, 233, 0.8) !important;
     }
 
-    .stSlider [role="slider"]:active::after {
-        cursor: grabbing;
-        transform: translate(-50%, -50%) scale(1.1);
-    }
-    
-    /* Skrytie čísiel na čiare slidera */
     div[data-testid="stThumbValue"] { display: none !important; }
 
-    /* Obrovské Žiarivé Tlačidlo (Teraz Modro/Tyrkysové) */
+    /* Menší box pre náhľad nahratého obrázka */
+    .image-preview-container {
+        max-width: 320px;
+        margin: 15px auto;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
     .stButton>button {
         background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%) !important;
         color: white !important;
         border: none !important;
-        padding: 22px 30px !important;
+        padding: 20px 30px !important;
         border-radius: 50px !important;
-        font-size: 1.5rem !important;
+        font-size: 1.3rem !important;
         font-weight: 900 !important;
-        letter-spacing: 1.5px !important;
+        letter-spacing: 1px !important;
         text-transform: uppercase !important;
-        box-shadow: 0 0 30px rgba(14, 165, 233, 0.6), 0 0 50px rgba(37, 99, 235, 0.4) !important;
+        box-shadow: 0 0 25px rgba(14, 165, 233, 0.5) !important;
         transition: all 0.3s ease !important;
         width: 100% !important;
-        margin-top: 30px !important;
+        margin-top: 20px !important;
     }
 
     .stButton>button:hover {
         transform: scale(1.02) translateY(-2px) !important;
-        box-shadow: 0 0 50px rgba(14, 165, 233, 0.9), 0 0 80px rgba(37, 99, 235, 0.7) !important;
+        box-shadow: 0 0 40px rgba(14, 165, 233, 0.8) !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. HELPER FUNKCIE
+# 3. HELPER FUNKCIE & DYNAMICKÉ AI MODELY
 # ==========================================
 def parsuj_json_odpoved(raw_text):
     if not raw_text:
@@ -199,16 +190,44 @@ def parsuj_json_odpoved(raw_text):
 
 def generuj_obsah_dynamicky(api_key, prompt, image):
     genai.configure(api_key=api_key)
-    m_obj = genai.GenerativeModel('gemini-1.5-flash')
+    
+    # Zistenie dostupných modelov, aby nenaskočila 404 chyba
+    dostupne_modely = []
     try:
-        resp = m_obj.generate_content([prompt, image], generation_config={"response_mime_type": "application/json"})
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                name = m.name.replace("models/", "")
+                dostupne_modely.append(name)
     except Exception:
-        resp = m_obj.generate_content([prompt, image])
-    return resp.text
+        pass
 
+    preferovane = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
+    zoradene = [m for m in preferovane if m in dostupne_modely]
+    for m in dostupne_modely:
+        if m not in zoradene:
+            zoradene.append(m)
+            
+    if not zoradene:
+        zoradene = ['gemini-2.5-flash', 'gemini-1.5-flash'] # fallback
+
+    posledna_chyba = None
+    for model_name in zoradene:
+        try:
+            m_obj = genai.GenerativeModel(model_name)
+            try:
+                resp = m_obj.generate_content([prompt, image], generation_config={"response_mime_type": "application/json"})
+            except Exception:
+                resp = m_obj.generate_content([prompt, image])
+            if resp and resp.text:
+                return resp.text
+        except Exception as e:
+            posledna_chyba = e
+            continue
+            
+    raise Exception(f"Nepodarilo sa pripojiť k AI modelom: {posledna_chyba}")
 
 # ==========================================
-# 4. HLAVNÝ INTERAKTÍVNY NADPIS
+# 4. HLAVNÝ NADPIS
 # ==========================================
 st.markdown("""
     <div class="glow-title-container">
@@ -217,113 +236,111 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 5. STRANICHOVANIE KNIHY (3 STRANY ZHORA)
+# 5. KLIKATEĽNÉ ZÁLOŽKY NA PREPÍNANIE STRÁN
 # ==========================================
-p1_active = "active" if st.session_state['page'] == 1 else ""
-p2_active = "active" if st.session_state['page'] == 2 else ""
-p3_active = "active" if st.session_state['page'] == 3 else ""
+c1, c2, c3 = st.columns(3)
+with c1:
+    if st.button("1. Kľúč & Poznámky", use_container_width=True):
+        st.session_state['page'] = 1
+        st.rerun()
+with c2:
+    if st.button("2. Náročnosť testu", use_container_width=True):
+        st.session_state['page'] = 2
+        st.rerun()
+with c3:
+    if st.button("3. Test & Výsledky", use_container_width=True):
+        st.session_state['page'] = 3
+        st.rerun()
 
-st.markdown(f"""
-    <div class="book-tabs">
-        <div class="tab-item {p1_active}">1. Dáta & Poznámky</div>
-        <div class="tab-item {p2_active}">2. Úroveň Testu</div>
-        <div class="tab-item {p3_active}">3. Test & Výsledky</div>
-    </div>
-""", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
-# KNIHA CONTAINER
+# ==========================================
+# 6. OBSAH KNIHY (3 STRANY)
+# ==========================================
 with st.container():
     st.markdown('<div class="book-container">', unsafe_allow_html=True)
 
-    # ------------------------------------
-    # STRANA 1: API KĽÚČ + ODFOŤ POZNÁMKY
-    # ------------------------------------
+    # STRANA 1
     if st.session_state['page'] == 1:
         st.markdown("<h2 style='text-align: center; color:#38bdf8;'>📸 STRANA 1: Kľúč & Poznámky</h2>", unsafe_allow_html=True)
         st.write(" ")
-        
-        st.info("💡 Aby AI fungovala, vlož najprv svoj Gemini API kľúč a potom nahraj fotku zošita.")
         
         api_key_input = st.text_input("🔑 Vlož Gemini API kľúč:", value=st.session_state['api_key'], type="password")
         if api_key_input:
             st.session_state['api_key'] = api_key_input
             
         st.markdown("<br>", unsafe_allow_html=True)
-        
-        uploaded_file = st.file_uploader("📸 Nahraj fotku zošita alebo poznámok:", type=["jpg", "png", "jpeg"])
+        uploaded_file = st.file_uploader("📸 Nahraj fotku zošita:", type=["jpg", "png", "jpeg"])
         
         if uploaded_file:
             st.session_state['uploaded_file'] = uploaded_file
-            st.image(uploaded_file, caption="Nahranný obrázok", use_container_width=True)
-            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown('<div class="image-preview-container">', unsafe_allow_html=True)
+            st.image(uploaded_file, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
             
-            if st.button("ĎALEJ NA VÝBER OBTIAŽNOSTI ➔"):
-                if not st.session_state['api_key']:
-                    st.error("⚠️ Nezabudni zadať API kľúč hore!")
-                else:
-                    st.session_state['page'] = 2
-                    st.rerun()
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("ĎALEJ NA VÝBER NÁROČNOSTI ➔"):
+            if not st.session_state['api_key']:
+                st.error("⚠️ Najprv vlož API kľúč!")
+            elif 'uploaded_file' not in st.session_state or not st.session_state['uploaded_file']:
+                st.error("⚠️ Najprv nahraj fotku poznámok!")
+            else:
+                st.session_state['page'] = 2
+                st.rerun()
 
-    # ------------------------------------
-    # STRANA 2: MOZGOVÝ SLIDER & VEĽKÉ TLAČIDLO
-    # ------------------------------------
+    # STRANA 2
     elif st.session_state['page'] == 2:
-        st.markdown("<h2 style='text-align: center; color:#38bdf8;'>🎯 STRANA 2: Posuň mozog a zvoľ náročnosť</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color:#94a3b8;'>Posúvaj mozog na čiare. Ľavá strana (Zelená) je najľahšia, stred (Žltá) je štandard, pravá strana (Červená) je extrém.</p>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color:#38bdf8;'>🎯 STRANA 2: Nastav náročnosť testu</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color:#94a3b8;'>Posúvaj posuvník po farebnej línii. Zelená = ľahké základy, Žltá = štandard, Červená = extrémne náročné.</p>", unsafe_allow_html=True)
         st.write(" ")
         
-        # Interaktívny slider 0 až 100
         slider_hodnota = st.slider("", 0, 100, 50, label_visibility="collapsed")
         
-        # Logika pre textový prompt pre AI na základe percent na čiare
         if slider_hodnota <= 33:
-            obtiaznost_text = "Úplné základy (najľahšia úroveň pre začiatočníkov, zistenie či chápu pointu)."
+            obtiaznost_text = "Úplné základy (najľahšia úroveň pre začiatočníkov)."
         elif slider_hodnota <= 66:
-            obtiaznost_text = "Stredná úroveň (štandardné otázky, bežný test v škole)."
+            obtiaznost_text = "Stredná úroveň (štandardné otázky, bežný test)."
         else:
-            obtiaznost_text = "Najťažšia úroveň (veľké detaily, chytáky, ťažké otázky pre expertov)."
+            obtiaznost_text = "Najťažšia úroveň (chytáky, hlboké detaily a ťažké otázky)."
 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Obrovské Žiarivé Tlačidlo
         if st.button("🔥 VYGENEROVAŤ TEST 🔥", use_container_width=True):
-            with st.spinner("✨ Kniha sa otvára na 3. strane... Generujem test..."):
-                try:
-                    image = Image.open(st.session_state['uploaded_file'])
-                    prompt = f"""
-                    Prečítaj si obrázok s poznámkami a vytvor z nich kvíz.
-                    Náročnosť otázok: {obtiaznost_text}
-                    
-                    Odpovedaj VÝHRADNE v JSON formáte presne takto:
-                    {{
-                      "vycuc": "Krátky prehľad učiva v Markdown formáte...",
-                      "test": [
+            if not st.session_state.get('api_key') or not st.session_state.get('uploaded_file'):
+                st.error("⚠️ Najprv skontroluj, či máš zadaný API kľúč a nahraný obrázok na 1. strane!")
+                st.session_state['page'] = 1
+                st.rerun()
+            else:
+                with st.spinner("✨ AI číta poznámky a vytvára test..."):
+                    try:
+                        image = Image.open(st.session_state['uploaded_file'])
+                        prompt = f"""
+                        Prečítaj si obrázok s poznámkami a vytvor z nich kvíz.
+                        Náročnosť otázok: {obtiaznost_text}
+                        
+                        Odpovedaj VÝHRADNE v JSON formáte:
                         {{
-                          "otazka": "Znenie otázky?",
-                          "moznosti": ["Možnosť A", "Možnosť B", "Možnosť C"],
-                          "spravna_odpoved_index": 0,
-                          "vysvetlenie": "Prečo je to správne"
+                          "vycuc": "Krátky prehľad učiva v Markdown formáte...",
+                          "test": [
+                            {{
+                              "otazka": "Znenie otázky?",
+                              "moznosti": ["Možnosť A", "Možnosť B", "Možnosť C"],
+                              "spravna_odpoved_index": 0,
+                              "vysvetlenie": "Prečo je to správne"
+                            }}
+                          ]
                         }}
-                      ]
-                    }}
-                    """
-                    raw_text = generuj_obsah_dynamicky(st.session_state['api_key'], prompt, image)
-                    st.session_state['data'] = parsuj_json_odpoved(raw_text)
-                    st.session_state['page'] = 3
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"❌ Chyba pri generovaní: {e}")
+                        """
+                        raw_text = generuj_obsah_dynamicky(st.session_state['api_key'], prompt, image)
+                        st.session_state['data'] = parsuj_json_odpoved(raw_text)
+                        st.session_state['page'] = 3
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Chyba pri generovaní: {e}")
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("⬅ Späť na 1. stranu"):
-            st.session_state['page'] = 1
-            st.rerun()
-
-    # ------------------------------------
-    # STRANA 3: SAMOTNÝ TEST A VÝSLEDKY
-    # ------------------------------------
+    # STRANA 3
     elif st.session_state['page'] == 3:
-        st.markdown("<h2 style='text-align: center; color:#38bdf8;'>🎮 STRANA 3: Tvoj Test</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color:#38bdf8;'>🎮 STRANA 3: Tvoj Test & Výsledky</h2>", unsafe_allow_html=True)
         st.write(" ")
 
         if st.session_state['data']:
@@ -346,7 +363,7 @@ with st.container():
 
                 if submit_quiz:
                     if None in user_answers:
-                        st.warning("⚠️ Odpovedz na všetky otázky!")
+                        st.warning("⚠️ Odpovedz na všetky otázky pred vyhodnotením!")
                     else:
                         st.session_state['quiz_submitted'] = True
                         st.session_state['user_answers'] = user_answers
@@ -368,9 +385,11 @@ with st.container():
 
                 st.balloons()
                 st.metric("Skóre", f"{score} z {len(questions)}")
+        else:
+            st.info("👈 Najprv prejdite 1. a 2. stranu a vygenerujte test.")
 
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🔄 Začať odznova (Nové poznámky)"):
+        if st.button("🔄 Začať odznova"):
             st.session_state['page'] = 1
             st.session_state['data'] = None
             st.session_state['quiz_submitted'] = False
