@@ -4,176 +4,264 @@ import json
 import re
 from PIL import Image
 
-# 1. Základné nastavenie stránky
-st.set_page_config(page_title="BrainBoost 🚀", page_icon="🧠", layout="centered")
+# 1. Nastavenie stránky
+st.set_page_config(
+    page_title="BrainBoost 🚀 | AI Študijný Parťák",
+    page_icon="🧠",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
+# 2. Custom CSS pre moderný, profesionálny dark-mode vzhľad
 st.markdown("""
     <style>
-    .big-font { font-size:22px !important; font-weight: bold; color: #4A90E2;}
-    .vycuc-box { background-color: #f0f2f6; padding: 20px; border-radius: 10px; margin-bottom: 20px;}
+    /* Hlavný pozadie a písmo */
+    .stApp {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Hero Header */
+    .hero-title {
+        font-size: 2.8rem !important;
+        font-weight: 800;
+        background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0px;
+    }
+    .hero-subtitle {
+        color: #94a3b8;
+        font-size: 1.1rem;
+        margin-bottom: 25px;
+    }
+    
+    /* Karty pre sekcie */
+    .custom-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 24px;
+        backdrop-filter: blur(10px);
+        margin-bottom: 20px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    
+    .card-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    /* Výcuc Box */
+    .vycuc-box {
+        background: rgba(15, 23, 42, 0.6);
+        border-left: 4px solid #818cf8;
+        border-radius: 8px;
+        padding: 20px;
+        color: #e2e8f0;
+        font-size: 1.05rem;
+        line-height: 1.7;
+    }
+
+    /* Badge */
+    .status-badge {
+        background: #0ea5e9;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
     </style>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
-st.title("🧠 BrainBoost: Z fotky do hlavy za minútu")
-st.markdown("Vyfoť poznámky, AI ti to vysvetlí ľudskou rečou a hneď ťa otestuje ako v hre. 🎮")
+# 3. Sidebar pre konfiguráciu
+with st.sidebar:
+    st.image("https://img.icons8.com/isometric-folders/100/brain.png", width=70)
+    st.title("BrainBoost Config")
+    st.markdown("---")
+    
+    st.subheader("🔑 API Nastavenia")
+    api_key = st.text_input(
+        "Vlož Google Gemini API kľúč:",
+        type="password",
+        help="Kľúč získaš zadarmo na aistudio.google.com"
+    )
+    
+    if api_key:
+        st.success("API kľúč je vložený! 🟢")
+    else:
+        st.warning("Zadaj kľúč pre aktiváciu AI 🔴")
+        
+    st.markdown("---")
+    st.markdown("### 💡 Ako na to?")
+    st.markdown("1. Nahraj jasnú fotku poznámok.\n2. Zvoľ náročnosť kvízu.\n3. Klikni na **Spustiť BrainBoost**.")
 
-with st.expander("⚙️ Nastavenia (Klikni pre zadanie API kľúča)", expanded=True):
-    api_key = st.text_input("Vlož svoj Google Gemini API kľúč:", type="password")
+# 4. Hlavný obsah
+st.markdown("<div class='status-badge'>AI STUDY COMPANION v2.0</div>", unsafe_allow_html=True)
+st.markdown("<h1 class='hero-title'>🧠 BrainBoost</h1>", unsafe_allow_html=True)
+st.markdown("<p class='hero-subtitle'>Premeň rukou písané poznámky na super-zrozumiteľný výcuc a interaktívny kvíz.</p>", unsafe_allow_html=True)
 
-col1, col2 = st.columns([1, 1])
+col1, col2 = st.columns([1, 1], gap="medium")
+
 with col1:
-    uploaded_file = st.file_uploader("📸 Nahraj fotku poznámok", type=["jpg", "png", "jpeg"])
-with col2:
-    st.markdown("<p class='big-font'>Zvoľ si svoju Arénu:</p>", unsafe_allow_html=True)
-    uroven = st.radio(
-        "Aký ťažký test zvládneš?",
-        ("🟢 Lvl 1: Noob (Len to zistím - 80% ľahké, 20% stredné)", 
-         "🟡 Lvl 2: Hráč (Už niečo viem - 30% ľahké, 60% stredné, 10% ťažké)", 
-         "🔴 Lvl 3: Boss (Poď do mňa - 10% ľahké, 10% stredné, 80% ťažké)"),
+    st.markdown("""
+        <div class='card-title'>📸 1. Nahratie Poznámok</div>
+    """, unsafe_allow_html=True)
+    uploaded_file = st.file_uploader(
+        "Vyber alebo presuň fotku zo zošita",
+        type=["jpg", "png", "jpeg"],
         label_visibility="collapsed"
     )
+    if uploaded_file:
+        st.image(uploaded_file, caption="Nahrávaná fotka", use_container_width=True)
 
-if st.button("🚀 Vygenerovať Výcuc a Hru!", use_container_width=True):
+with col2:
+    st.markdown("""
+        <div class='card-title'>🎯 2. Výber Náročnosti Arény</div>
+    """, unsafe_allow_html=True)
+    uroven = st.radio(
+        "Zvoľ si výzvu:",
+        (
+            "🟢 Lvl 1: Noob (80% ľahké, 20% stredné)",
+            "🟡 Lvl 2: Hráč (30% ľahké, 60% stredné, 10% ťažké)",
+            "🔴 Lvl 3: Boss (10% ľahké, 10% stredné, 80% ťažké)"
+        ),
+        index=1
+    )
+    
+st.markdown("<br>", unsafe_allow_html=True)
+generate_btn = st.button("🚀 Spustiť AI BrainBoost!", type="primary", use_container_width=True)
+
+# 5. Bezpečná funkcia pre volanie Gemini modelov s fallbackom
+def generuj_obsah_s_fallbackom(api_key, prompt, image):
+    genai.configure(api_key=api_key)
+    
+    # Zoznam stabilných aktívnych modelov
+    prioritne_modely = [
+        "gemini-1.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-pro",
+        "gemini-2.0-flash-exp"
+    ]
+    
+    posledna_chyba = None
+    for model_name in prioritne_modely:
+        try:
+            m_obj = genai.GenerativeModel(model_name)
+            resp = m_obj.generate_content([prompt, image])
+            if resp and resp.text:
+                return resp.text
+        except Exception as e:
+            posledna_chyba = e
+            continue
+            
+    raise Exception(f"Nepodarilo sa spojiť so žiadnym funkčným Gemini modelom. Detaily: {posledna_chyba}")
+
+# 6. Logika generovania
+if generate_btn:
     if not api_key:
-        st.error("Zabudol si na API kľúč v nastaveniach! 😅")
+        st.error("⚠️ Prosím, vlož svoj Google Gemini API kľúč v ľavom bočnom paneli!")
     elif not uploaded_file:
-        st.error("Kde je fotka? Nemám čo čítať! 📸")
+        st.error("📸 Nahraj prosím fotku poznámok!")
     else:
-        with st.spinner("AI mozog šrotuje... Tvorím legendárny výcuc a chystám pasce do kvízu! ⏳"):
+        with st.spinner("⚡ AI študuje tvoje poznámky a pripravuje výcuc a kvíz..."):
             try:
-                genai.configure(api_key=api_key)
-                
-                # Dynamic model discovery (zistí presné dostupné modely pre tvoj kľúč)
-                dostupne_modely = []
-                try:
-                    for m in genai.list_models():
-                        if 'generateContent' in m.supported_generation_methods:
-                            dostupne_modely.append(m.name)
-                except Exception as e_key:
-                    st.error(f"Problem s API kľúčom: {e_key}")
-                    st.stop()
-                
-                if not dostupne_modely:
-                    st.error("Tvoj API kľúč nemá prístup k žiadnemu dostupnému modelu.")
-                    st.stop()
-                
-                # Vyberie najlepší model (prednosť má rýchly Flash)
-                najlepsi_model = None
-                for m_name in dostupne_modely:
-                    if 'flash' in m_name.lower():
-                        najlepsi_model = m_name
-                        break
-                if not najlepsi_model:
-                    najlepsi_model = dostupne_modely[0]
-                
-                model = genai.GenerativeModel(najlepsi_model)
                 image = Image.open(uploaded_file)
-                
                 prompt = f"""
-                Si super-inteligentný, ale mimoriadne vtipný a chápavý študijný parťák.
-                Tvojou úlohou je prečítať poznámky z obrázka a vytvoriť odpoveď PRESNE v tomto JSON formáte.
-                Nevypisuj absolútne žiadny iný text okolo, len čistý JSON.
-                
+                Si priateľský, vtipný a múdry študijný mentor.
+                Prečítaj si obrázok s poznámkami a vytvor odpoveď STRICTNE v nasledujúcom JSON formáte.
+                Nevracaj žiadny markdown obal okrem čistého JSON.
+
                 Pravidlá pre "vycuc":
-                - Vysvetli látku ako pre úplného začiatočníka.
-                - Používaj vtipné prirovnania z bežného života (hry, jedlo, popkultúra).
-                - Používaj emoji. Daj to do krátkych, úderných odstavcov a odrážok.
-                
+                - Vysvetli tému jednoducho a názorne s vtipnými prirovnaniami.
+                - Použi prehľadné odrážky, tučné písmo a emoji.
+
                 Pravidlá pre "test":
-                - Vygeneruj presne 10 otázok podľa tejto obtiažnosti: {uroven}.
-                - Ku každej otázke daj 3 možnosti.
-                - Vymysli vtipné, ale náučné vysvetlenie správnej odpovede.
-                
-                VYŽADOVANÝ JSON FORMÁT:
+                - Vygeneruj presne 10 otázok pre úroveň: {uroven}.
+                - Pre každú otázku uveď 3 možnosti a index správnej odpovede (0, 1 alebo 2).
+                - Pridaj krátke naučné vysvetlenie.
+
+                JSON FORMÁT:
                 {{
-                  "vycuc": "Tu bude tvoj úžasný, markdownom formátovaný výcuc s emoji...",
+                  "vycuc": "Text výcucu v markdown...",
                   "test": [
                     {{
                       "otazka": "Znenie otázky?",
-                      "moznosti": ["Odpoveď A", "Odpoveď B", "Odpoveď C"],
+                      "moznosti": ["Možnosť A", "Možnosť B", "Možnosť C"],
                       "spravna_odpoved_index": 0,
-                      "vysvetlenie": "Prečo je to tak (vtipne vysvetlené)."
+                      "vysvetlenie": "Vysvetlenie prečo..."
                     }}
                   ]
                 }}
                 """
                 
-                response = model.generate_content([prompt, image])
+                raw_text = generuj_obsah_s_fallbackom(api_key, prompt, image)
                 
-                # Bezpečné vytiahnutie JSON dát z odpovede
-                text_odpovede = response.text
-                match = re.search(r'\{.*\}', text_odpovede, re.DOTALL)
+                # Vytiahnutie čistého JSONu
+                match = re.search(r'\{.*\}', raw_text, re.DOTALL)
                 if match:
-                    json_str = match.group(0)
-                    data = json.loads(json_str)
-                    st.session_state['data'] = data
+                    json_data = json.loads(match.group(0))
+                    st.session_state['data'] = json_data
                     st.session_state['test_vyhodnoteny'] = False
                     st.session_state['image'] = image
+                    st.success("🎉 Výcuc a kvíz sú pripravené!")
                 else:
-                    st.error("AI sa trochu poplietla a nevrátila dáta v správnom formáte. Skús to stlačiť ešte raz.")
-                    
+                    st.error("AI vrátila neplatný formát dát. Skús to znova.")
             except Exception as e:
-                st.error(f"Došlo k chybe pri spracovaní: {e}")
+                st.error(f"❌ Došlo k chybe: {e}")
 
-# Vykreslenie výstupu
+# 7. Zobrazenie výsledkov
 if 'data' in st.session_state:
-    st.divider()
-    with st.expander("Pozrieť pôvodnú fotku"):
-        st.image(st.session_state['image'], use_column_width=True)
+    st.markdown("---")
+    tab1, tab2 = st.tabs(["📖 Interaktívny Výcuc", "🎮 Kvízová Aréna"])
     
-    tab_vycuc, tab_kviz = st.tabs(["📖 Nadupaný Výcuc", "🎮 Otestuj sa!"])
-    
-    with tab_vycuc:
+    with tab1:
         st.markdown("<div class='vycuc-box'>", unsafe_allow_html=True)
         st.markdown(st.session_state['data']['vycuc'])
         st.markdown("</div>", unsafe_allow_html=True)
-        st.success("Keď toto pochopíš, preklikni hore na záložku '🎮 Otestuj sa!'")
         
-    with tab_kviz:
-        st.markdown("### Aréna pripravená. Poď na to!")
+    with tab2:
+        st.subheader("Otestuj sa!")
         with st.form("quiz_form"):
-            user_answers = []
-            for i, q in enumerate(st.session_state['data']['test']):
-                st.markdown(f"**{i+1}. {q['otazka']}**")
-                ans = st.radio("Vyber si:", q['moznosti'], key=f"q_{i}", index=None)
-                user_answers.append(ans)
-                st.write("---")
+            answers = []
+            for idx, q in enumerate(st.session_state['data']['test']):
+                st.markdown(f"**{idx+1}. {q['otazka']}**")
+                ans = st.radio("Vyber odpoveď:", q['moznosti'], key=f"q_{idx}", index=None)
+                answers.append(ans)
+                st.markdown("<br>", unsafe_allow_html=True)
                 
-            submitted = st.form_submit_button("🏆 Vyhodnotiť moje vedomosti", type="primary", use_container_width=True)
-            
+            submitted = st.form_submit_button("🏆 Vyhodnotiť test", use_container_width=True)
             if submitted:
-                if None in user_answers:
-                    st.warning("Ešte si neodpovedal na všetky otázky! Zisti, čo ti chýba.")
+                if None in answers:
+                    st.warning("Odpovedaj prosím na všetky otázky!")
                 else:
                     st.session_state['test_vyhodnoteny'] = True
-                    st.session_state['user_answers'] = user_answers
+                    st.session_state['user_answers'] = answers
 
-# Vyhodnotenie kvízu
 if st.session_state.get('test_vyhodnoteny'):
-    st.markdown("## 📊 Tvoje skóre")
-    skore = 0
-    otazky = st.session_state['data']['test']
-    odpovede = st.session_state['user_answers']
+    st.markdown("### 📊 Výsledok Kvízu")
+    score = 0
+    questions = st.session_state['data']['test']
+    user_ans = st.session_state['user_answers']
     
-    for i, q in enumerate(otazky):
-        spravny_text = q['moznosti'][q['spravna_odpoved_index']]
-        if odpovede[i] == spravny_text:
-            skore += 1
+    for i, q in enumerate(questions):
+        correct_text = q['moznosti'][q['spravna_odpoved_index']]
+        if user_ans[i] == correct_text:
+            score += 1
             st.success(f"**{i+1}. Správne!** {q['vysvetlenie']}")
         else:
-            st.error(f"**{i+1}. Vedľa!** Tvoja odpoveď: {odpovede[i]} | Správne: {spravny_text}")
-            st.info(f"💡 Dôvod: {q['vysvetlenie']}")
+            st.error(f"**{i+1}. Nesprávne.** Tvoja odpoveď: {user_ans[i]} | Správna: {correct_text}")
+            st.info(f"💡 {q['vysvetlenie']}")
             
-    percenta = (skore / len(otazky)) * 100
-    st.metric(label="Úspešnosť", value=f"{skore}/{len(otazky)} ({percenta}%)")
-    
-    if percenta == 100:
+    pct = int((score / len(questions)) * 100)
+    st.metric("Tvoje Skóre", f"{score} / {len(questions)} ({pct}%)")
+    if pct >= 80:
         st.balloons()
-        st.success("SI ABSOLÚTNY BOH! 👑")
-    elif percenta >= 80:
-        st.balloons()
-        st.success("Výborne! Si pripravený na písomku. 🚀")
-    elif percenta >= 50:
-        st.warning("Celkom fajn, ale ešte by to chcelo prebehnúť si výcuc raz. 📖")
-    else:
-        st.error("Nevadí! Presne na to sme tu. Prečítaj si výcuc znova, chyby ťa naučia najviac! 💪")
