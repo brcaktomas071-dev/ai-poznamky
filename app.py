@@ -4,7 +4,7 @@ import json
 import re
 from PIL import Image
 
-# 1. Základné nastavenie
+# 1. Základné nastavenie stránky
 st.set_page_config(page_title="BrainBoost 🚀", page_icon="🧠", layout="centered")
 
 st.markdown("""
@@ -43,19 +43,29 @@ if st.button("🚀 Vygenerovať Výcuc a Hru!", use_container_width=True):
             try:
                 genai.configure(api_key=api_key)
                 
-                # AUTO-DISCOVERY MODELU (Hľadá najlepší dostupný model pre tvoj kľúč)
-                najlepsi_model = 'gemini-1.5-flash' # Základná voľba
+                # Dynamic model discovery (zistí presné dostupné modely pre tvoj kľúč)
+                dostupne_modely = []
                 try:
                     for m in genai.list_models():
                         if 'generateContent' in m.supported_generation_methods:
-                            if '1.5-flash' in m.name:
-                                najlepsi_model = m.name
-                                break
-                            elif '1.5-pro' in m.name:
-                                najlepsi_model = m.name
-                except:
-                    pass # Ak kontrola zlyhá, pokračujeme so základom
-                    
+                            dostupne_modely.append(m.name)
+                except Exception as e_key:
+                    st.error(f"Problem s API kľúčom: {e_key}")
+                    st.stop()
+                
+                if not dostupne_modely:
+                    st.error("Tvoj API kľúč nemá prístup k žiadnemu dostupnému modelu.")
+                    st.stop()
+                
+                # Vyberie najlepší model (prednosť má rýchly Flash)
+                najlepsi_model = None
+                for m_name in dostupne_modely:
+                    if 'flash' in m_name.lower():
+                        najlepsi_model = m_name
+                        break
+                if not najlepsi_model:
+                    najlepsi_model = dostupne_modely[0]
+                
                 model = genai.GenerativeModel(najlepsi_model)
                 image = Image.open(uploaded_file)
                 
@@ -90,7 +100,7 @@ if st.button("🚀 Vygenerovať Výcuc a Hru!", use_container_width=True):
                 
                 response = model.generate_content([prompt, image])
                 
-                # BEZPEČNÉ PARSOVANIE JSONU (Odolné voči chybám)
+                # Bezpečné vytiahnutie JSON dát z odpovede
                 text_odpovede = response.text
                 match = re.search(r'\{.*\}', text_odpovede, re.DOTALL)
                 if match:
@@ -99,14 +109,13 @@ if st.button("🚀 Vygenerovať Výcuc a Hru!", use_container_width=True):
                     st.session_state['data'] = data
                     st.session_state['test_vyhodnoteny'] = False
                     st.session_state['image'] = image
-                    st.rerun() # Obnoví stránku pre zobrazenie
                 else:
-                    st.error("AI sa trochu poplietla a nevrátila dáta v čitateľnom formáte. Skús stlačiť tlačidlo ešte raz.")
+                    st.error("AI sa trochu poplietla a nevrátila dáta v správnom formáte. Skús to stlačiť ešte raz.")
                     
             except Exception as e:
-                st.error(f"Došlo k chybe pri spojení s AI: {e}")
+                st.error(f"Došlo k chybe pri spracovaní: {e}")
 
-# Vykreslenie, ak sú dáta pripravené
+# Vykreslenie výstupu
 if 'data' in st.session_state:
     st.divider()
     with st.expander("Pozrieť pôvodnú fotku"):
@@ -138,9 +147,8 @@ if 'data' in st.session_state:
                 else:
                     st.session_state['test_vyhodnoteny'] = True
                     st.session_state['user_answers'] = user_answers
-                    st.rerun()
 
-# Vyhodnotenie
+# Vyhodnotenie kvízu
 if st.session_state.get('test_vyhodnoteny'):
     st.markdown("## 📊 Tvoje skóre")
     skore = 0
