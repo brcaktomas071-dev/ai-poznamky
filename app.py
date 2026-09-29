@@ -49,7 +49,7 @@ if st.button("🚀 Vygenerovať Výcuc a Hru!", use_container_width=True):
                 # Nastavenie AI
                 genai.configure(api_key=api_key)
                 # Použijeme parameter response_mime_type, ktorý prinúti AI vrátiť strojovo čitateľný JSON!
-                model = genai.GenerativeModel('gemini-1.5-flash', generation_config={"response_mime_type": "application/json"})
+                model = genai.GenerativeModel('gemini-1.5-flash-latest', generation_config={"response_mime_type": "application/json"})
                 
                 image = Image.open(uploaded_file)
                 
