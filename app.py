@@ -5,187 +5,235 @@ import re
 from PIL import Image
 
 # ==========================================
-# 1. NASTAVENIE STRÁNKY A TÉMY
+# 1. NASTAVENIE STRÁNKY
 # ==========================================
 st.set_page_config(
     page_title="BrainBoost | AI Študijný Parťák",
     page_icon="🧠",
     layout="wide",
-    initial_sidebar_state="collapsed" # Začneme so zbaleným sidebarom pre čistejší look
+    initial_sidebar_state="collapsed"
 )
 
-# Custom CSS inšpirované moderným dizajnom (Astra AI style)
+# ==========================================
+# 2. CUSTOM CSS (Astra AI moderný štýl)
+# ==========================================
 st.markdown("""
     <style>
-    /* Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
 
-    /* Hlavné pozadie - Tmavý "vesmírny" vzhľad */
     .stApp {
         background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%);
         font-family: 'Outfit', sans-serif;
         color: #e2e8f0;
     }
     
-    /* Skrytie predvolených prvkov Streamlitu (čistejší look) */
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* Hlavný Nadpis (Hero Section) */
+    /* Hero Section */
     .hero-container {
         text-align: center;
-        padding-top: 5vh;
-        padding-bottom: 5vh;
+        padding-top: 2vh;
+        padding-bottom: 3vh;
     }
     .hero-title {
-        font-size: 4.5rem !important;
+        font-size: 3.8rem !important;
         font-weight: 800;
         line-height: 1.1;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         color: white;
     }
     .pixel-text {
-        font-family: 'Courier New', Courier, monospace; /* Pixelovaný feel pre slovo "skúšky" */
+        font-family: 'Courier New', Courier, monospace;
         font-weight: 900;
         text-shadow: 2px 2px 0px rgba(255,255,255,0.2);
     }
     .hero-subtitle {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         color: #94a3b8;
         font-weight: 300;
-        margin-bottom: 40px;
+        margin-bottom: 25px;
     }
 
-    /* "Glassmorphism" Karty pre interakciu */
-    .action-card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 24px;
-        padding: 30px;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        margin-bottom: 20px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    /* Styling pre Streamlit kontajnery (Glassmorphism obdĺžniky zabalené okolo obsahu) */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 24px !important;
+        padding: 24px !important;
+        backdrop-filter: blur(16px) !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
     }
-    .action-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 30px 50px rgba(0,0,0,0.5);
-    }
+
     .card-heading {
-        font-size: 1.3rem;
-        font-weight: 600;
-        color: #ffffff;
-        margin-bottom: 20px;
-        text-align: center;
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        margin-bottom: 15px !important;
     }
 
-    /* Moderné Hlavné Tlačidlo */
+    /* Tlačidlá pre obtiažnosť NOOB - HRÁČ - BOSS (Veľké, horizontálne zľava doprava) */
+    div[data-testid="stRadio"] {
+        width: 100%;
+    }
+
+    div[data-testid="stRadio"] > div {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 12px !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+    }
+
+    div[data-testid="stRadio"] > div > label {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 16px !important;
+        padding: 18px 10px !important;
+        flex: 1 !important;
+        text-align: center !important;
+        cursor: pointer !important;
+        transition: all 0.25s ease !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    div[data-testid="stRadio"] > div > label:hover {
+        background: rgba(124, 58, 237, 0.25) !important;
+        border-color: #8b5cf6 !important;
+        transform: translateY(-2px) !important;
+    }
+
+    div[data-testid="stRadio"] > div > label[data-checked="true"] {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+        border-color: #a855f7 !important;
+        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.5) !important;
+    }
+
+    /* Skrytie krúžku v radio buttonoch pre čistý tlačidlový vzhľad */
+    div[data-testid="stRadio"] input[type="radio"] {
+        display: none !important;
+    }
+
+    div[data-testid="stRadio"] label p {
+        font-size: 1.15rem !important;
+        font-weight: 800 !important;
+        color: #ffffff !important;
+        margin: 0 !important;
+    }
+
+    /* Hlavné akčné tlačidlo */
     .stButton>button {
         background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
         color: white !important;
         border: none !important;
-        padding: 16px 32px !important;
+        padding: 18px 32px !important;
         border-radius: 50px !important;
-        font-size: 1.2rem !important;
-        font-weight: 600 !important;
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
         letter-spacing: 0.5px;
-        box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4) !important;
+        box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4) !important;
         transition: all 0.3s ease !important;
         width: 100% !important;
-        margin-top: 20px !important;
+        margin-top: 15px !important;
     }
     .stButton>button:hover {
         transform: translateY(-2px) !important;
         box-shadow: 0 15px 35px rgba(124, 58, 237, 0.6) !important;
-        background: linear-gradient(135deg, #5b52f6 0%, #8b5cf6 100%) !important;
     }
 
-    /* Výsledkový Box (Výcuc) */
+    /* Výsledkový Box pre Výcuc */
     .result-box {
         background: rgba(15, 23, 42, 0.8);
         border-left: 5px solid #7c3aed;
-        border-radius: 12px;
-        padding: 30px;
+        border-radius: 16px;
+        padding: 25px;
         color: #f1f5f9;
-        font-size: 1.15rem;
+        font-size: 1.1rem;
         line-height: 1.8;
-        box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
-    }
-
-    /* Vlastné Radio buttons (Pokus o čistejší look) */
-    .stRadio > label {
-        font-weight: 600;
-        color: #cbd5e1;
-    }
-    
-    /* Vylepšenie file uploaderu */
-    [data-testid="stFileUploadDropzone"] {
-        background-color: rgba(255,255,255,0.02) !important;
-        border: 2px dashed rgba(255,255,255,0.2) !important;
-        border-radius: 16px !important;
-    }
-    [data-testid="stFileUploadDropzone"]:hover {
-        border-color: #7c3aed !important;
-        background-color: rgba(124, 58, 237, 0.05) !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. BEZPEČNÉ VOLANIE MODELU (Dynamické zistenie)
+# 3. HELPER FUNKCIE (JSON & AI Volanie)
 # ==========================================
+def parsuj_json_odpoved(raw_text):
+    """Bezpečne vytiahne a preloží JSON z odpovede AI."""
+    if not raw_text:
+        raise ValueError("AI vrátila prázdnu odpoveď.")
+    
+    cleaned = raw_text.strip()
+    cleaned = re.sub(r'^```json\s*', '', cleaned, flags=re.IGNORECASE | re.MULTILINE)
+    cleaned = re.sub(r'^```\s*', '', cleaned, flags=re.IGNORECASE | re.MULTILINE)
+    cleaned = re.sub(r'```$', '', cleaned, flags=re.IGNORECASE | re.MULTILINE)
+    cleaned = cleaned.strip()
+
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        pass
+
+    start_idx = cleaned.find('{')
+    end_idx = cleaned.rfind('}')
+    if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+        json_candidate = cleaned[start_idx:end_idx + 1]
+        try:
+            return json.loads(json_candidate)
+        except json.JSONDecodeError:
+            json_fixed = re.sub(r',\s*([}\]])', r'\1', json_candidate)
+            return json.loads(json_fixed)
+            
+    raise ValueError("Nepodarilo sa spracovať JSON od AI. Skús to prosím znova.")
+
 def generuj_obsah_dynamicky(api_key, prompt, image):
-    """Zistí dostupné modely a vyskúša ich, čím eliminuje chyby 404."""
+    """Vyskúša dostupné modely a vygeneruje čistý JSON."""
     genai.configure(api_key=api_key)
     
     dostupne_modely = []
     try:
-        # Dynamicky stiahne zoznam všetkých modelov dostupných pre tvoj kľúč
         for m in genai.list_models():
             if 'generateContent' in m.supported_generation_methods:
-                # Očistíme názov (odstránime 'models/' ak tam je)
                 name = m.name.replace("models/", "")
                 dostupne_modely.append(name)
     except Exception as e:
-        raise Exception(f"Chyba pri overovaní API kľúča (Zadal si ho správne?): {e}")
+        raise Exception(f"Chyba pri overovaní API kľúča: {e}")
 
     if not dostupne_modely:
-         raise Exception("Tvoj API kľúč nemá prístup k žiadnym modelom na generovanie obsahu.")
+         raise Exception("Tvoj API kľúč nemá prístup k žiadnym modelom Gemini.")
 
-    # Uprednostníme známe rýchle modely, ak sú v dostupnom zozname
-    preferovane = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash']
-    zoradene_modely = []
-    
-    # Najprv pridáme preferované, ktoré účet podporuje
-    for p in preferovane:
-        if p in dostupne_modely:
-            zoradene_modely.append(p)
-    # Potom pridáme ostatné
+    preferovane = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash', 'gemini-1.5-flash-latest']
+    zoradene_modely = [m for m in preferovane if m in dostupne_modely]
     for m in dostupne_modely:
         if m not in zoradene_modely:
             zoradene_modely.append(m)
 
     posledna_chyba = None
-    # Skúšame jeden model po druhom, kým sa nepodarí
     for model_name in zoradene_modely:
         try:
             m_obj = genai.GenerativeModel(model_name)
-            resp = m_obj.generate_content([prompt, image])
+            try:
+                # Zapnutie striktného JSON režimu
+                resp = m_obj.generate_content(
+                    [prompt, image],
+                    generation_config={"response_mime_type": "application/json"}
+                )
+            except Exception:
+                resp = m_obj.generate_content([prompt, image])
+                
             if resp and resp.text:
                 return resp.text
         except Exception as e:
             posledna_chyba = e
-            continue # Ak tento model zlyhá (napr. na 404), ideme na ďalší
+            continue
             
-    raise Exception(f"Nepodarilo sa vygenerovať odpoveď zo žiadneho dostupného modelu. Posledná chyba: {posledna_chyba}")
+    raise Exception(f"Nepodarilo sa spojiť so žiadnym modelom. Posledná chyba: {posledna_chyba}")
 
 # ==========================================
-# 3. ROZHRANIE (UI)
+# 4. UŽÍVATEĽSKÉ ROZHRANIE
 # ==========================================
-
-# -- Sidebar (Nastavenia schované naboku) --
 with st.sidebar:
     st.markdown("### ⚙️ Nastavenia")
     api_key = st.text_input(
@@ -198,7 +246,7 @@ with st.sidebar:
     else:
         st.success("API kľúč aktívny ✓")
 
-# -- Hero Section (Hlavná vizuálna dominanta) --
+# Hero Nadpis
 st.markdown("""
     <div class="hero-container">
         <h1 class="hero-title">Priprav sa na <span class="pixel-text">skúšky</span><br>2x rýchlejšie s AI</h1>
@@ -206,100 +254,77 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# -- Interaktívne Karty (Upload a Nastavenie) --
-col1, col_space, col2 = st.columns([1, 0.1, 1])
+# Dva hlavné obdĺžniky umiestnené presne okolo obsahu
+col1, col2 = st.columns(2, gap="medium")
 
 with col1:
-    st.markdown("<div class='action-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='card-heading'>📸 1. Nahraj poznámky</div>", unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
-    if uploaded_file:
-         st.image(uploaded_file, caption="Pripravené na analýzu", use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown("<div class='card-heading'>📸 1. Nahraj poznámky</div>", unsafe_allow_html=True)
+        uploaded_file = st.file_uploader("", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
+        if uploaded_file:
+            st.image(uploaded_file, caption="Pripravené na analýzu", use_container_width=True)
 
 with col2:
-    st.markdown("<div class='action-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='card-heading'>🎯 2. Nastav obtiažnosť</div>", unsafe_allow_html=True)
-    uroven = st.radio(
-        "",
-        (
-            "🟢 Noob (Chcem len pochopiť základy)",
-            "🟡 Hráč (Už niečo viem, otestuj ma)",
-            "🔴 Boss (Daj mi tie najťažšie chytáky)"
-        ),
-        index=1,
-        label_visibility="collapsed"
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown("<div class='card-heading'>🎯 2. Nastav obtiažnosť</div>", unsafe_allow_html=True)
+        uroven = st.radio(
+            "",
+            ("🟢 NOOB", "🟡 HRÁČ", "🔴 BOSS"),
+            index=1,
+            horizontal=True,
+            label_visibility="collapsed"
+        )
 
-# -- Hlavné Spúšťacie Tlačidlo --
+st.markdown("<br>", unsafe_allow_html=True)
 generate_btn = st.button("Začni zadarmo (Spustiť BrainBoost)", use_container_width=True)
 
 # ==========================================
-# 4. LOGIKA A GENEROVANIE
+# 5. GENERAVANIE A VYHODNOTENIE
 # ==========================================
 if generate_btn:
     if not api_key:
-        st.error("⚠️ Hej! Zabudol si si nastaviť API kľúč v ľavom paneli (klikni na šípku vľavo hore).")
+        st.error("⚠️ Zabudol si zadať API kľúč v ľavom paneli!")
     elif not uploaded_file:
-        st.error("📸 Najprv musíš nahrať nejakú fotku poznámok, inak nemám čo analyzovať.")
+        st.error("📸 Najprv nahraj fotku poznámok!")
     else:
-        with st.spinner("✨ Kúzlim... AI číta tvoje poznámky a vymýšľa otázky..."):
+        with st.spinner("✨ Kúzlim... AI číta tvoje poznámky a pripravuje výcuc aj kvíz..."):
             try:
                 image = Image.open(uploaded_file)
                 prompt = f"""
-                Si ten najlepší, moderný a vtipný študijný mentor.
-                Prečítaj si poznámky z obrázka a vytvor odpoveď STRICTNE v nasledujúcom JSON formáte.
-                Nevracaj absolútne žiadny iný text, len čistý JSON.
+                Si super inteligentný a priateľský študijný mentor.
+                Prečítaj si obrázok s poznámkami a vytvor odpoveď VÝHRADNE v JSON formáte.
 
-                Pravidlá pre "vycuc":
-                - Vysvetli tému tak jednoducho, aby to pochopil aj mimozemšťan.
-                - Použi prirovnania, krátke odrážky, tučné písmo na kľúčové slová a občas emoji.
+                Obtiažnosť kvízu: {uroven}
 
-                Pravidlá pre "test":
-                - Vymysli presne 10 testových otázok. Obtiažnosť: {uroven}.
-                - Každá otázka musí mať 3 možnosti odpovedí.
-                - "spravna_odpoved_index" musí byť číslo 0, 1, alebo 2 (označuje správnu možnosť v poli "moznosti").
-                - Pridaj "vysvetlenie" - krátky, vtipný dôvod, prečo je to tak.
-
-                JSON FORMÁT:
+                VYŽADOVANÝ JSON FORMÁT (presne dodrž názvy kľúčov):
                 {{
-                  "vycuc": "Sem daj svoj super vysvetľujúci text vo formáte Markdown...",
+                  "vycuc": "Sem daj svoj prehľadný výcuc učiva v markdown formáte...",
                   "test": [
                     {{
-                      "otazka": "Tu bude otázka?",
-                      "moznosti": ["Odpoveď 1", "Odpoveď 2", "Odpoveď 3"],
+                      "otazka": "Znenie otázky?",
+                      "moznosti": ["Možnosť 1", "Možnosť 2", "Možnosť 3"],
                       "spravna_odpoved_index": 0,
-                      "vysvetlenie": "Pretože to jednoducho tak funguje!"
+                      "vysvetlenie": "Stručné vtipné vysvetlenie prečo je to tak"
                     }}
                   ]
                 }}
                 """
                 
-                # Volanie novej "nepriestrelnej" funkcie
                 raw_text = generuj_obsah_dynamicky(api_key, prompt, image)
+                json_data = parsuj_json_odpoved(raw_text)
                 
-                # Očistenie a parsovanie JSONu
-                match = re.search(r'\{.*\}', raw_text, re.DOTALL)
-                if match:
-                    json_data = json.loads(match.group(0))
-                    st.session_state['data'] = json_data
-                    st.session_state['test_vyhodnoteny'] = False
-                    st.success("Tadá! Všetko je pripravené. Zoscroľuj nižšie.")
-                else:
-                    st.error("Model vygeneroval odpoveď, ale v zlom formáte. Skús stlačiť tlačidlo ešte raz.")
-            
-            except Exception as e:
-                st.error(f"❌ Nastala chyba: {e}")
+                st.session_state['data'] = json_data
+                st.session_state['test_vyhodnoteny'] = False
+                st.success("🎉 Výcuc a kvíz sú hotové!")
 
-# ==========================================
-# 5. ZOBRAZENIE VÝSLEDKOV (Výcuc & Kvíz)
-# ==========================================
+            except Exception as e:
+                st.error(f"❌ Došlo k chybe: {e}")
+
+# Zobrazenie výsledkov
 if 'data' in st.session_state:
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown("---")
     
-    # Moderné Taby
     tab1, tab2 = st.tabs(["📖 Rýchly Výcuc Látky", "🎮 Otestuj svoje vedomosti"])
     
     with tab1:
@@ -308,50 +333,47 @@ if 'data' in st.session_state:
         st.markdown("</div>", unsafe_allow_html=True)
         
     with tab2:
-        st.markdown("<div class='action-card'>", unsafe_allow_html=True)
-        st.markdown("### 🔥 Aréna je pripravená")
-        with st.form("quiz_form"):
-            answers = []
-            for idx, q in enumerate(st.session_state['data']['test']):
-                st.markdown(f"**{idx+1}. {q['otazka']}**")
-                ans = st.radio("Vyber si:", q['moznosti'], key=f"q_{idx}", index=None, label_visibility="collapsed")
-                answers.append(ans)
-                st.markdown("<br>", unsafe_allow_html=True)
-                
-            submitted = st.form_submit_button("🏆 Vyhodnotiť moje odpovede", use_container_width=True)
-            if submitted:
-                if None in answers:
-                    st.warning("⚠️ Neulievaj sa! Odpovedz na všetky otázky pred vyhodnotením.")
-                else:
-                    st.session_state['test_vyhodnoteny'] = True
-                    st.session_state['user_answers'] = answers
-        st.markdown("</div>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("### 🔥 Aréna je pripravená")
+            with st.form("quiz_form"):
+                answers = []
+                for idx, q in enumerate(st.session_state['data']['test']):
+                    st.markdown(f"**{idx+1}. {q['otazka']}**")
+                    ans = st.radio("Vyber si:", q['moznosti'], key=f"q_{idx}", index=None, label_visibility="collapsed")
+                    answers.append(ans)
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    
+                submitted = st.form_submit_button("🏆 Vyhodnotiť moje odpovede", use_container_width=True)
+                if submitted:
+                    if None in answers:
+                        st.warning("⚠️ Neulievaj sa! Odpovedz na všetky otázky pred vyhodnotením.")
+                    else:
+                        st.session_state['test_vyhodnoteny'] = True
+                        st.session_state['user_answers'] = answers
 
-# -- Vyhodnotenie --
 if st.session_state.get('test_vyhodnoteny'):
-    st.markdown("<div class='action-card'>", unsafe_allow_html=True)
-    st.markdown("## 📊 Tvoj Finálny Report")
-    score = 0
-    questions = st.session_state['data']['test']
-    user_ans = st.session_state['user_answers']
-    
-    for i, q in enumerate(questions):
-        correct_text = q['moznosti'][q['spravna_odpoved_index']]
-        if user_ans[i] == correct_text:
-            score += 1
-            st.success(f"**{i+1}. Správne!** {q['vysvetlenie']}")
-        else:
-            st.error(f"**{i+1}. Zle!** Dal si '{user_ans[i]}', ale správne je '{correct_text}'.")
-            st.info(f"💡 Dôvod: {q['vysvetlenie']}")
-            
-    pct = int((score / len(questions)) * 100)
-    
-    col_res1, col_res2 = st.columns(2)
-    with col_res1:
-        st.metric("Skóre", f"{score} z {len(questions)}")
-    with col_res2:
-        st.metric("Úspešnosť", f"{pct}%")
+    with st.container(border=True):
+        st.markdown("## 📊 Tvoj Finálny Report")
+        score = 0
+        questions = st.session_state['data']['test']
+        user_ans = st.session_state['user_answers']
         
-    if pct >= 80:
-        st.balloons()
-    st.markdown("</div>", unsafe_allow_html=True)
+        for i, q in enumerate(questions):
+            correct_text = q['moznosti'][q['spravna_odpoved_index']]
+            if user_ans[i] == correct_text:
+                score += 1
+                st.success(f"**{i+1}. Správne!** {q['vysvetlenie']}")
+            else:
+                st.error(f"**{i+1}. Zle!** Tvoja odpoveď: '{user_ans[i]}', Správna: '{correct_text}'")
+                st.info(f"💡 Dôvod: {q['vysvetlenie']}")
+                
+        pct = int((score / len(questions)) * 100)
+        
+        col_res1, col_res2 = st.columns(2)
+        with col_res1:
+            st.metric("Skóre", f"{score} z {len(questions)}")
+        with col_res2:
+            st.metric("Úspešnosť", f"{pct}%")
+            
+        if pct >= 80:
+            st.balloons()
