@@ -224,3 +224,156 @@ p2_active = "active" if st.session_state['page'] == 2 else ""
 p3_active = "active" if st.session_state['page'] == 3 else ""
 
 st.markdown(f"""
+    <div class="book-tabs">
+        <div class="tab-item {p1_active}">1. Dáta & Poznámky</div>
+        <div class="tab-item {p2_active}">2. Úroveň Testu</div>
+        <div class="tab-item {p3_active}">3. Test & Výsledky</div>
+    </div>
+""", unsafe_allow_html=True)
+
+# KNIHA CONTAINER
+with st.container():
+    st.markdown('<div class="book-container">', unsafe_allow_html=True)
+
+    # ------------------------------------
+    # STRANA 1: API KĽÚČ + ODFOŤ POZNÁMKY
+    # ------------------------------------
+    if st.session_state['page'] == 1:
+        st.markdown("<h2 style='text-align: center; color:#38bdf8;'>📸 STRANA 1: Kľúč & Poznámky</h2>", unsafe_allow_html=True)
+        st.write(" ")
+        
+        st.info("💡 Aby AI fungovala, vlož najprv svoj Gemini API kľúč a potom nahraj fotku zošita.")
+        
+        api_key_input = st.text_input("🔑 Vlož Gemini API kľúč:", value=st.session_state['api_key'], type="password")
+        if api_key_input:
+            st.session_state['api_key'] = api_key_input
+            
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        uploaded_file = st.file_uploader("📸 Nahraj fotku zošita alebo poznámok:", type=["jpg", "png", "jpeg"])
+        
+        if uploaded_file:
+            st.session_state['uploaded_file'] = uploaded_file
+            st.image(uploaded_file, caption="Nahranný obrázok", use_container_width=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            if st.button("ĎALEJ NA VÝBER OBTIAŽNOSTI ➔"):
+                if not st.session_state['api_key']:
+                    st.error("⚠️ Nezabudni zadať API kľúč hore!")
+                else:
+                    st.session_state['page'] = 2
+                    st.rerun()
+
+    # ------------------------------------
+    # STRANA 2: MOZGOVÝ SLIDER & VEĽKÉ TLAČIDLO
+    # ------------------------------------
+    elif st.session_state['page'] == 2:
+        st.markdown("<h2 style='text-align: center; color:#38bdf8;'>🎯 STRANA 2: Posuň mozog a zvoľ náročnosť</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color:#94a3b8;'>Posúvaj mozog na čiare. Ľavá strana (Zelená) je najľahšia, stred (Žltá) je štandard, pravá strana (Červená) je extrém.</p>", unsafe_allow_html=True)
+        st.write(" ")
+        
+        # Interaktívny slider 0 až 100
+        slider_hodnota = st.slider("", 0, 100, 50, label_visibility="collapsed")
+        
+        # Logika pre textový prompt pre AI na základe percent na čiare
+        if slider_hodnota <= 33:
+            obtiaznost_text = "Úplné základy (najľahšia úroveň pre začiatočníkov, zistenie či chápu pointu)."
+        elif slider_hodnota <= 66:
+            obtiaznost_text = "Stredná úroveň (štandardné otázky, bežný test v škole)."
+        else:
+            obtiaznost_text = "Najťažšia úroveň (veľké detaily, chytáky, ťažké otázky pre expertov)."
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Obrovské Žiarivé Tlačidlo
+        if st.button("🔥 VYGENEROVAŤ TEST 🔥", use_container_width=True):
+            with st.spinner("✨ Kniha sa otvára na 3. strane... Generujem test..."):
+                try:
+                    image = Image.open(st.session_state['uploaded_file'])
+                    prompt = f"""
+                    Prečítaj si obrázok s poznámkami a vytvor z nich kvíz.
+                    Náročnosť otázok: {obtiaznost_text}
+                    
+                    Odpovedaj VÝHRADNE v JSON formáte presne takto:
+                    {{
+                      "vycuc": "Krátky prehľad učiva v Markdown formáte...",
+                      "test": [
+                        {{
+                          "otazka": "Znenie otázky?",
+                          "moznosti": ["Možnosť A", "Možnosť B", "Možnosť C"],
+                          "spravna_odpoved_index": 0,
+                          "vysvetlenie": "Prečo je to správne"
+                        }}
+                      ]
+                    }}
+                    """
+                    raw_text = generuj_obsah_dynamicky(st.session_state['api_key'], prompt, image)
+                    st.session_state['data'] = parsuj_json_odpoved(raw_text)
+                    st.session_state['page'] = 3
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Chyba pri generovaní: {e}")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("⬅ Späť na 1. stranu"):
+            st.session_state['page'] = 1
+            st.rerun()
+
+    # ------------------------------------
+    # STRANA 3: SAMOTNÝ TEST A VÝSLEDKY
+    # ------------------------------------
+    elif st.session_state['page'] == 3:
+        st.markdown("<h2 style='text-align: center; color:#38bdf8;'>🎮 STRANA 3: Tvoj Test</h2>", unsafe_allow_html=True)
+        st.write(" ")
+
+        if st.session_state['data']:
+            data = st.session_state['data']
+            
+            with st.expander("📖 Prečítať si rýchly výcuc poznámok"):
+                st.markdown(data.get('vycuc', ''))
+
+            st.markdown("---")
+            
+            with st.form("quiz_form_book"):
+                user_answers = []
+                for idx, q in enumerate(data['test']):
+                    st.markdown(f"**{idx+1}. {q['otazka']}**")
+                    ans = st.radio("Odpoveď:", q['moznosti'], key=f"book_q_{idx}", index=None, label_visibility="collapsed")
+                    user_answers.append(ans)
+                    st.markdown("<br>", unsafe_allow_html=True)
+
+                submit_quiz = st.form_submit_button("🏆 VYHODNOTIŤ TEST", use_container_width=True)
+
+                if submit_quiz:
+                    if None in user_answers:
+                        st.warning("⚠️ Odpovedz na všetky otázky!")
+                    else:
+                        st.session_state['quiz_submitted'] = True
+                        st.session_state['user_answers'] = user_answers
+
+            if st.session_state.get('quiz_submitted'):
+                st.markdown("### 📊 Výsledný Report")
+                score = 0
+                questions = data['test']
+                u_ans = st.session_state['user_answers']
+
+                for i, q in enumerate(questions):
+                    correct_text = q['moznosti'][q['spravna_odpoved_index']]
+                    if u_ans[i] == correct_text:
+                        score += 1
+                        st.success(f"**{i+1}. Správne!** {q['vysvetlenie']}")
+                    else:
+                        st.error(f"**{i+1}. Nesprávne!** Správna odpoveď bola: {correct_text}")
+                        st.info(f"💡 Dôvod: {q['vysvetlenie']}")
+
+                st.balloons()
+                st.metric("Skóre", f"{score} z {len(questions)}")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🔄 Začať odznova (Nové poznámky)"):
+            st.session_state['page'] = 1
+            st.session_state['data'] = None
+            st.session_state['quiz_submitted'] = False
+            st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
